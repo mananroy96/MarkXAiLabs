@@ -1,7 +1,7 @@
 "use client";
 
 import { Header } from "@/components/header";
-import { ContactForm } from "@/components/contact-form";
+import  ContactForm  from "@/components/contact-form";
 import { Footer } from "@/components/footer";
 
 export default function ContactPage() {

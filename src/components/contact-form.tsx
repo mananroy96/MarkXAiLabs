@@ -32,6 +32,8 @@ const contactFormSchema = z.object({
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
 
+// Exporting as default to align with common Next.js patterns for components
+// that are the primary export of a file.
 export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
