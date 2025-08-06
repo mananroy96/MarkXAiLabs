@@ -49,7 +49,7 @@ export function ContactForm() {
   const onSubmit = async (data: ContactFormValues) => {
     setIsSubmitting(true);
     try {
-      const response = await fetch("https://script.google.com/macros/s/AKfycbyGK9kBiPrd3BZeq8emh5YB-bkfIcaMp2niqszTXeHxQJff1T1GqomVCtMsocSnQJOu/exec", {
+      const response = await fetch("https://script.google.com/macros/s/AKfycby8DR8NtvenvngV6BcQji_dIdvUNDl08j3BCRdRtnMF3ZHNf6o0ZZLTnmTxbd5xNEdl0g/exec", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
