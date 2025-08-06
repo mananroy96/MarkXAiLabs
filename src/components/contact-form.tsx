@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
+// Assuming these are available from your project's UI library
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,24 +17,25 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
-import Image from "next/image";
+import { Loader2 } from "lucide-react"; // For loading spinner
+import { motion } from "framer-motion"; // For animations
+import Image from "next/image"; // For Next.js Image component
 
 // ✅ Validation Schema
 const contactFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  businessEmail: z.string().email("Invalid email"),
-  phone: z.string().min(10, "Phone number is required"),
+  businessEmail: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone number is required (at least 10 digits)"),
   query: z.string().min(1, "Message is required"),
 });
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
 
-export function ContactForm() {
+export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // State for error messages
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
@@ -47,40 +49,51 @@ export function ContactForm() {
   });
 
   const onSubmit = async (data: ContactFormValues) => {
-  setIsSubmitting(true);
+    setIsSubmitting(true);
+    setErrorMessage(null); // Clear any previous error messages
 
-  try {
-    const formData = new FormData();
-    formData.append("First Name", data.firstName);
-    formData.append("Last Name", data.lastName);
-    formData.append("Email", data.businessEmail);
-    formData.append("Phone", data.phone);
-    formData.append("Message", data.query);
+    try {
+      // IMPORTANT: Replace 'YOUR_SHEETDB_API_URL' with your actual SheetDB.io API URL.
+      // You will get this URL after setting up your Google Sheet with SheetDB.io.
+      // Example: https://sheetdb.io/api/v1/YOUR_API_ID
+      const sheetDBApiUrl = "https://sheetdb.io/api/v1/i2pzp58gubuoq"; // <<<--- REPLACE THIS!
 
-    // Optional extras:
-    formData.append("_captcha", "false");           // Disable reCAPTCHA
-    formData.append("_template", "box");            // Clean layout
-    formData.append("_subject", "New Contact Form"); // Custom email subject
-    formData.append("_next", "https://markxailabs.vercel.app"); // Redirect after submit
+      // Data to be sent to SheetDB.io.
+      // The keys here should match your Google Sheet column headers exactly.
+      const payload = {
+        "First Name": data.firstName,
+        "Last Name": data.lastName,
+        "Email": data.businessEmail,
+        "Phone": data.phone,
+        "Message": data.query,
+        // You can add more fields if your spreadsheet has more columns, e.g.:
+        // "Submission Date": new Date().toLocaleString(),
+      };
 
-    const response = await fetch("https://formsubmit.co/downloadgames2002@email.com", {
-      method: "POST",
-      body: formData,
-    });
+      const response = await fetch(sheetDBApiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", // SheetDB.io expects JSON for POST requests
+        },
+        body: JSON.stringify(payload), // Convert the payload to a JSON string
+      });
 
-    if (response.ok) {
-      form.reset();
-      setShowThankYou(true);
-      console.log("✅ Form submission sent via FormSubmit");
-    } else {
-      console.error("❌ Failed to send form via FormSubmit");
+      if (response.ok) {
+        form.reset();
+        setShowThankYou(true);
+        console.log("✅ Form submission sent successfully to SheetDB.io");
+      } else {
+        const errorText = await response.text();
+        console.error("❌ Failed to send form to SheetDB.io:", response.status, errorText);
+        setErrorMessage("Failed to send your message. Please try again later.");
+      }
+    } catch (err) {
+      console.error("❌ Network error submitting form:", err);
+      setErrorMessage("Network error. Please check your internet connection and try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (err) {
-    console.error("❌ Network error submitting form:", err);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
 
   return (
@@ -94,6 +107,22 @@ export function ContactForm() {
             <Button
               onClick={() => setShowThankYou(false)}
               className="bg-primary text-white px-4 py-2 rounded"
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Error Message Modal */}
+      {errorMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-red-100 text-red-800 p-6 rounded-lg shadow-xl w-full max-w-sm text-center border border-red-400">
+            <h3 className="text-xl font-bold mb-2">Submission Error</h3>
+            <p className="mb-4">{errorMessage}</p>
+            <Button
+              onClick={() => setErrorMessage(null)}
+              className="bg-red-500 text-white px-4 py-2 rounded"
             >
               Close
             </Button>
@@ -237,7 +266,7 @@ export function ContactForm() {
             className="hidden lg:block"
           >
             <Image
-              src="/image/contact/img-upgrade.png"
+              src="/image/contact/img-upgrade.png" // Ensure this path is correct
               alt="Contact Illustration"
               width={625}
               height={580}
