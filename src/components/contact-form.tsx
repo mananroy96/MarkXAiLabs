@@ -47,27 +47,41 @@ export function ContactForm() {
   });
 
   const onSubmit = async (data: ContactFormValues) => {
-    setIsSubmitting(true);
-    try {
-      const response = await fetch("https://script.google.com/macros/library/d/1tX0HMswKPZ1z8sAHoCpxbZedpgLL3g2thgZkg21MYYDMwmbL9uzV6VqO/1", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+  setIsSubmitting(true);
 
-      if (response.ok) {
-        form.reset();
-        setShowThankYou(true);
-        console.log("✅ Data sent to Google Sheets");
-      } else {
-        console.error("❌ Google Apps Script returned an error");
-      }
-    } catch (err) {
-      console.error("❌ Network or script error:", err);
-    } finally {
-      setIsSubmitting(false);
+  try {
+    const formData = new FormData();
+    formData.append("First Name", data.firstName);
+    formData.append("Last Name", data.lastName);
+    formData.append("Email", data.businessEmail);
+    formData.append("Phone", data.phone);
+    formData.append("Message", data.query);
+
+    // Optional extras:
+    formData.append("_captcha", "false");           // Disable reCAPTCHA
+    formData.append("_template", "box");            // Clean layout
+    formData.append("_subject", "New Contact Form"); // Custom email subject
+    formData.append("_next", "https://markxailabs.vercel.app"); // Redirect after submit
+
+    const response = await fetch("https://formsubmit.co/downloadgames2002@email.com", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (response.ok) {
+      form.reset();
+      setShowThankYou(true);
+      console.log("✅ Form submission sent via FormSubmit");
+    } else {
+      console.error("❌ Failed to send form via FormSubmit");
     }
-  };
+  } catch (err) {
+    console.error("❌ Network error submitting form:", err);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   return (
     <section className="py-12 md:py-16 bg-darkmode" id="contact">
